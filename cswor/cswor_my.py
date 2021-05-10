@@ -41,7 +41,7 @@ def DMHG_martingale(x, DM_alpha, T_null):
     '''
     # put into numpy column vector format
     T_null = np.array(T_null)[:, None]
-
+    # print(T_null)
     # Make x a numpy array
     x = np.array(x)
 
@@ -74,7 +74,7 @@ def DMHG_martingale(x, DM_alpha, T_null):
                                                  log_scale=True)
     log_M_t = log_prior_0 - log_posterior_0t
     martingale = np.exp(log_M_t)
-
+    # print("Martingale: ", martingale.shape)
     return martingale
 
 def logical_cs(x, N):
@@ -137,6 +137,7 @@ def ci_from_martingale_2D(mu_hat, N, mart_vec,
         value not rejected
     '''
     where_in_cs = np.where(mart_vec < 1/alpha)
+    # print(where_in_cs.shape, where_in_cs)
 
     # If can't find anything in the CS, we'll need to
     # return something that is a superset of the CS
@@ -199,6 +200,7 @@ def cs_from_martingale_2D(x, N, mart_fn, n=None,
     '''
     possible_m = np.arange(0, N+1+search_step, step=search_step)/N
     possible_m = possible_m[possible_m <= 1]
+    # print("posible_m: ", possible_m)
     mart_mtx = np.zeros((len(possible_m), len(x)))
 
     if n is None:
@@ -296,10 +298,20 @@ def BBHG_confseq(x, N, BB_alpha, BB_beta, n=None, alpha=0.05,
     # Get x into "overparameterized" form as we usually do with multinomials,
     # for example.
     DM_x = np.vstack((x, n - x))
+
+    # print("dmxxx", DM_x[:, :10])
+    # print("shappee: ", DM_x.shape)
+    # DM_x = np.zeros((3, N))
+    # for i in range(N):
+    #     k = random.randint(0, 2)
+    #     DM_x[k][i] = 1
     
-    mart_fn = lambda x, m: DMHG_martingale(np.vstack((x, n-x)),
+    mart_fn = lambda x, m: DMHG_martingale(DM_x,
                                            [BB_alpha, BB_beta],
                                            [int(N*m), N-int(N*m)])
+    # mart_fn = lambda x, m1, m2: DMHG_martingale(DM_x,
+    #                                        [BB_alpha, BB_beta, 1],
+    #                                        [int(N * m1), int(N * m2), N- int(N * m1) - int(N*m2)])
     
     l_01, u_01 =\
         cs_from_martingale_2D(x, N, mart_fn, n=n, alpha=alpha, 
